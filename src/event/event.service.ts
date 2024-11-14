@@ -6,26 +6,26 @@ import { EventQuery } from './query/event.query';
 
 @Injectable()
 export class EventService {
-    constructor(private readonly eventRepository: EventRepository) {}
+  constructor(private readonly eventRepository: EventRepository) {}
 
-    // async findAllEvents():  Promise<EventListDto> {
-    //     const events: EventData[] = await this.eventRepository.findAllEvents();
+  // async findAllEvents():  Promise<EventListDto> {
+  //     const events: EventData[] = await this.eventRepository.findAllEvents();
 
-    //     return EventListDto.from(events);
-    // }
+  //     return EventListDto.from(events);
+  // }
 
-    async getEventById(eventId: number): Promise<EventDto> {
-        const event = await this.eventRepository.getEventById(eventId);
-         if (!event) {
-            throw new NotFoundException('Event가 존재하지 않습니다.');
-         }
-
-         return EventDto.from(event);
+  async getEventById(eventId: number): Promise<EventDto> {
+    const event = await this.eventRepository.getEventById(eventId);
+    if (!event) {
+      throw new NotFoundException('Event가 존재하지 않습니다.');
     }
 
-    async getEvents(query: EventQuery): Promise<EventListDto> {
-        const events = await this.eventRepository.getEvents(query);
+    return EventDto.from(event);
+  }
 
-        return EventListDto.from(events);
-    }
+  async getEvents(query: EventQuery): Promise<EventListDto> {
+    const events = await this.eventRepository.getEvents(query);
+
+    return EventListDto.from(events);
+  }
 }

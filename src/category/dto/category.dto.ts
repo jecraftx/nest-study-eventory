@@ -29,7 +29,7 @@ export class CategoryDto {
 export class CategoryListDto {
   @ApiProperty({
     description: '카테고리 목록',
-        type: [CategoryDto]
+    type: [CategoryDto],
   })
   categories!: CategoryDto[];
 
