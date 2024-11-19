@@ -18,13 +18,6 @@ import { EventQuery } from './query/event.query';
 export class EventController {
   constructor(private readonly eventService: EventService) {}
 
-  // @Get()
-  // @ApiOperation({ summary: 'all events list'})
-  // @ApiOkResponse({ type: EventListDto })
-  // async findAllevents(): Promise<EventListDto> {
-  //     return this.eventService.findAllEvents();
-  // }
-
   @Get(':eventId')
   @ApiOperation({ summary: '이벤트 상세 정보를 가져옵니다' })
   @ApiOkResponse({ type: EventDto })
