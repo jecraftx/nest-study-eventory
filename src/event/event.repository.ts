@@ -5,12 +5,6 @@ import { EventData } from "./type/event-data.type";
 import { EventQuery } from "./query/event.query";
 import { User, Category, City } from '@prisma/client';
 
-// 모임은 시작 전까지 호스트가 삭제/수정할 수 있습니다.
-// 호스트는 참석자를 강제로 제거할 수 없습니다.
-// 모임 시작 전까지 유저는 참가하거나 탈퇴할 수 있습니다.
-// 유저는 모임을 생성하고 호스트가 될 수 있습니다.
-// isStarted // isHost  <- 필요한가요?
-
 @Injectable() 
 export class EventRepository {
     constructor(private readonly prisma: PrismaService) {}

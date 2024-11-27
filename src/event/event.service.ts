@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException} from '@nestjs/common';
 import { EventRepository } from './event.repository';
+import {UserBaseInfo} from '../auth/type/user-base-info.type';
 import { EventListDto, EventDto } from './dto/event.dto';
 import { CreateEventData } from './type/create-event-data.type';
 import { EventQuery } from './query/event.query';
@@ -7,15 +8,31 @@ import { CreateEventPayload } from './payload/create-event.payload';
 import { EventData } from './type/event-data.type';
 import { EventJoin } from '@prisma/client';
 
+
+// # API for creating events
+
+// # - Users can create events and become the host.
+// # - Events include title, description, host, category, location, times, and capacity.
+// # - Events have three statuses: Before Start, Ongoing, Ended.
+// # - Only the host can modify/delete events before they start.
+// # - Joining/leaving is allowed only before the event starts.
+
+// # API:
+// # - Method: POST
+// # - URL: /events
+// # - Request: Event details (host, title, category, etc.)
+// # - Response: Created event data with ID.
+
+// # Tip: Host is automatically added as a participant.
+
+
 @Injectable()
 export class EventService {
     constructor(private readonly eventRepository: EventRepository) {}
 
     async createEvent(payload: CreateEventPayload): Promise<EventDto> {
         const isEventExist = await this.eventRepository.isEventExist(
-            payload.hostId,
-            // payload.cityId,
-            // payload.categoryId,
+            payload.hostId
         );
 
         if (isEventExist) {
@@ -32,18 +49,6 @@ export class EventService {
                 '시작 시간은 종료 시간보다 이전이어야 합니다.');
         }
 
-        if (payload.maxPeople <= 0) {
-            throw new BadRequestException('최대 정원은 1명 이상이어야 합니다.');
-        }
-       
-        // payload에 userId와 eventId가 없어 어떤 걸 써야 할지 모르겠어요..
-        // const isUserJoinedEvent = await this.eventRepository.isUserJoinedEvent(
-        // );
-        // already implemented in the repos
-        // if (!isUserJoinedEvent){
-        //     throw new ConflictException('해당 유저가 Event에 참가하지 않았습니다.');
-        // }
-
         const createData: CreateEventData = {
             hostId: payload.hostId,
             title: payload.title,
@@ -56,11 +61,6 @@ export class EventService {
         }
 
         const event = await this.eventRepository.createEvent(createData);
-
-        const host = await this.eventRepository.isHost(event.id, payload.hostId);
-        if (!host) {
-            throw new NotFoundException('host가 존재하지 않습니다')
-        }
 
         return EventDto.from(event);
     }
@@ -80,4 +80,54 @@ export class EventService {
 
         return EventListDto.from(events);
     }
+
+    async joinEvent(eventId: number): Promise<void> {
+        const event = await this.eventRepository.findEventById(eventId);
+
+        if(event.hostId === user.id) { 
+            throw new ConflictException('Host can not leave the Event.')
+        }
+
+        if(event.startTime < new Date()) {
+            throw new ConflictException('Cannot join an event that has already started.');
+        }
+
+        const participantsIds = await this.eventRepository.getParticipantsIds(eventId);
+
+        if (participantsIds.includes(user.id)) {
+            throw new ConflictException('You are already a participant of this event.')
+        }
+
+        if (participantsIds.length >= event.maxPeople) {
+            throw new ConflictException('Event is already full.')
+        }
+
+        await this.eventRepository.isUserJoinedEvent(eventId, user.id);
+        
+    }
+
+    async leaveEvent(eventId: number): Promise<void> {
+        const event = this.eventRepository.findEventById(eventId);
+        if (!event) {
+            throw new NotFoundException('Can not find the Event.');
+        }
+
+        if(event.hostId === user.id) { 
+            throw new ConflictException('Host can not leave the Event.')
+        }
+
+        if (event.startTime < new Date()) {
+            throw new ConflictException('Cannot leave an event that has already started.')
+        }
+
+        const participantsIds = await this.eventRepository.getParticipantsIds(eventId);
+
+        if (!participantsIds.includes(user.id)) {
+            throw new ConflictException('You are not a participant of this event.')
+        }
+
+        await this.eventRepository.leaveEvent(eventId, user.id);
+    }
+
+
 }

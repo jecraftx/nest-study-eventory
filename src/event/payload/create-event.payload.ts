@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsString, Max, Min, IsDate, MinDate, MaxDate} from 'class-validator';
+import { IsInt, IsString, Max, Min, IsDate, MinDate, MaxDate, IsPositive, IsArray} from 'class-validator';
 
 export class CreateEventPayload {
     @IsInt()
+    @IsPositive()
     @ApiProperty({
       description: 'host ID',
       type: Number,
@@ -24,6 +25,7 @@ export class CreateEventPayload {
     description!: string;
 
     @IsInt()
+    @IsPositive()
     @ApiProperty({
       description: 'category ID',
       type: Number,
@@ -31,9 +33,10 @@ export class CreateEventPayload {
     categoryId!: number;
 
     @IsInt()
+    @IsPositive()
     @ApiProperty({
       description: 'city ID',
-      type: Number,
+      type: [Number],
     })
     cityId!: number;
 
@@ -46,8 +49,6 @@ export class CreateEventPayload {
     startTime!: Date;
 
     @IsDate()
-    @MinDate(new Date()) 
-    @MaxDate(new Date('2025-12-31')) 
     @ApiProperty({
         description: 'end time',
         type: Date,
@@ -55,8 +56,7 @@ export class CreateEventPayload {
     endTime!: Date;
 
     @IsInt()
-    @Min(5)
-    @Max(100)
+    @Min(2)
     @ApiProperty({
         description: 'max people',
         type: Number,
