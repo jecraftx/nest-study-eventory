@@ -20,7 +20,7 @@ export class EventRepository {
                 startTime: data.startTime,
                 endTime: data.endTime,
                 maxPeople: data.maxPeople,
-              },
+            },
             select: {
                 id: true,
                 hostId: true,
@@ -31,43 +31,8 @@ export class EventRepository {
                 startTime: true,
                 endTime: true,
                 maxPeople: true,
-            },
+            }
         });
-    }
-
-    // need the user to compare with the host id 
-    async getUserById(userId: number): Promise<User | null> {
-        return this.prisma.user.findUnique({
-            where: { id: userId },
-        });
-    }
-
-    // needed by default, if not event then no users, nothing
-    async isEventExist(eventId: number): Promise<boolean> {
-        const event = await this.prisma.event.findUnique({
-            where: { id: eventId },
-        });
-        return !!event;
-    }
-
-    // if user joined the event
-    // however user can not join the event if it already started 
-    async isUserJoinedEvent(eventId: number, userId: number): Promise<boolean> {
-        const eventJoin = await this.prisma.eventJoin.findUnique({
-            where: { eventId_userId: { eventId, userId } },
-        });
-        return !!eventJoin;
-    }
-
-    // if host then can delete and edit the events before they start
-    async isHost(eventId: number, userId: number): Promise<boolean> {
-        const event = await this.prisma.event.findFirst({
-            where: {
-                id: eventId,
-                hostId: userId,
-            },
-        });
-        return !!event;
     }
 
     async getEventById(eventId: number): Promise<EventData | null> {
@@ -89,7 +54,6 @@ export class EventRepository {
         });
     }
 
-    // host category city IDs
     async getEvents(query: EventQuery): Promise<EventData[]> {
         return this.prisma.event.findMany({
             where: {
@@ -110,5 +74,54 @@ export class EventRepository {
               },
         });
     }
+
+    async getCategoryById(categoryId: number): Promise<Category | null > {
+        return this.prisma.category.findUnique({
+            where: {
+                id: categoryId
+            }
+        });
+    }
+
+    async getCityById(cityId: number): Promise<City | null> {
+        return this.prisma.city.findUnique({
+            where: {
+                id: cityId
+            }
+        });
+    }
+    
+    async getParticipantsIds(eventId: number, userId: number): Promise<number[]> {
+        const data = await this.prisma.eventJoin.findMany({
+            where: {
+                eventId,
+                userId
+            }
+        });
+
+        return data.map((d) => d.userId);
+    }
+
+    async joinEvent(eventId: number, userId: number): Promise<void> {
+        await this.prisma.eventJoin.create({
+            data: {
+                eventId,
+                userId
+            },
+        });
+    }
+
+    async leaveEvent(eventId: number, userId: number): Promise<void> {
+        await this.prisma.eventJoin.delete({
+            where: {
+                eventId_userId: {
+                    eventId,
+                    userId,
+                }
+            }
+        })
+    }
 }
+
+
 

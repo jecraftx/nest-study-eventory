@@ -1,10 +1,12 @@
 import { Controller, Get, Post, ParseIntPipe, Query, Param, Body} from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags, ApiCreatedResponse } from '@nestjs/swagger';
 import { EventService } from './event.service';
-import { Event} from '@prisma/client';
+import { Event, User} from '@prisma/client';
 import { EventListDto, EventDto } from './dto/event.dto';
 import { CreateEventPayload } from './payload/create-event.payload'; 
 import { EventQuery } from './query/event.query';
+import { UserBaseInfo }  from '../auth/type/user-base-info.type';
+import { CurrentUser } from '../auth/decorator/user.decorator';
 
 @Controller('event')
 @ApiTags('Event API')
@@ -14,8 +16,8 @@ export class EventController {
     @Post()
     @ApiOperation({ summary: '이벤트를 생성합니다' })
     @ApiCreatedResponse({ type:EventDto })
-    async createEvent(@Body() payload: CreateEventPayload): Promise<EventDto> {
-        return this.eventService.createEvent(payload);
+    async createEvent(@Body() payload: CreateEventPayload, @CurrentUser() user: UserBaseInfo): Promise<EventDto> {
+        return this.eventService.createEvent(payload, user);
     }
 
     @Get(':eventId')
