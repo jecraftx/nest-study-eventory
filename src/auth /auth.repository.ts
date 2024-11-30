@@ -8,5 +8,4 @@ import { UpdateUserData } from './type/update-user-data.type';
 @Injectable()
 export class AuthRepository {
   constructor(private readonly prisma: PrismaService) {}
-
 }

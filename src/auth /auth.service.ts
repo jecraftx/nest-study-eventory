@@ -19,5 +19,4 @@ export class AuthService {
     private readonly passwordService: BcryptPasswordService,
     private readonly tokenService: TokenService,
   ) {}
-
 }
