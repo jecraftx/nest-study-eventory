@@ -9,23 +9,6 @@ import { EventData } from './type/event-data.type';
 import { EventJoin, User } from '@prisma/client';
 
 
-// # API for creating events
-
-// # - Users can create events and become the host.   - done 
-// # - Events include title, description, host, category, location, times, and capacity.  - done 
-// # - Events have three statuses: Before Start, Ongoing, Ended.  - done 
-// # - Only the host can modify/delete events before they start.  - done 
-// # - Joining/leaving is allowed only before the event starts.   - done 
-
-// # API:
-// # - Method: POST
-// # - URL: /events
-// # - Request: Event details (host, title, category, etc.)
-// # - Response: Created event data with ID.
-
-// # Tip: Host is automatically added as a participant.
-
-
 @Injectable()
 export class EventService {
     constructor(private readonly eventRepository: EventRepository) {}
