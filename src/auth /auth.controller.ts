@@ -15,5 +15,4 @@ import { LoginPayload } from './payload/login.payload';
 @ApiTags('Auth API')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
 }

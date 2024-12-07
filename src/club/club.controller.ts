@@ -21,14 +21,15 @@ import { UserBaseInfo } from 'src/auth /type/user-base-info-type';
 @Controller('club')
 @ApiTags('Club API')
 export class ClubController {
-    constructor(private readonly clubService: ClubService) {}
+  constructor(private readonly clubService: ClubService) {}
 
-    @Post()
-    @ApiOperation({ summary: 'Club Create' })
-    @ApiCreatedResponse({ type: ClubDto })
-    async createClub(
-        @Body() payload: CreateClubPayload,
-        @CurrentUser() user: UserBaseInfo,): Promise<ClubDto> {
-        return this.clubService.createClub(payload, user);
-    }
+  @Post()
+  @ApiOperation({ summary: 'Club Create' })
+  @ApiCreatedResponse({ type: ClubDto })
+  async createClub(
+    @Body() payload: CreateClubPayload,
+    @CurrentUser() user: UserBaseInfo,
+  ): Promise<ClubDto> {
+    return this.clubService.createClub(payload, user);
+  }
 }

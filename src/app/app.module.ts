@@ -11,7 +11,15 @@ import { EventModule } from 'src/event/event.module';
 import { ClubModule } from 'src/club/club.module';
 
 @Module({
-  imports: [configModule, RegionModule, CommonModule, CategoryModule, ReviewModule, EventModule, ClubModule],
+  imports: [
+    configModule,
+    RegionModule,
+    CommonModule,
+    CategoryModule,
+    ReviewModule,
+    EventModule,
+    ClubModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
