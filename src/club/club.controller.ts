@@ -33,44 +33,44 @@ import { ClubService } from './club.service';
 @Controller('club')
 @ApiTags('Club API')
 export class ClubController {
-    constructor(private readonly clubService: ClubService) {}
+  constructor(private readonly clubService: ClubService) {}
 
-    @Post()
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Club Create' })
-    @ApiCreatedResponse({ type: ClubDto })
-    async createClub(
-      @Body() payload: CreateClubPayload,
-      @CurrentUser() user: UserBaseInfo,
-    ): Promise<ClubDto> {
-        return this.clubService.createClub(payload, user);
-    }
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Club Create' })
+  @ApiCreatedResponse({ type: ClubDto })
+  async createClub(
+    @Body() payload: CreateClubPayload,
+    @CurrentUser() user: UserBaseInfo,
+  ): Promise<ClubDto> {
+    return this.clubService.createClub(payload, user);
+  }
 
-    @Get()
-    @ApiOperation({ summary: 'Club get all' })
-    @ApiOkResponse({ type: ClubListDto })
-    async getClubs(@Query() query: ClubQuery): Promise<ClubListDto> {
-        return this.clubService.getClubs(query);
-    }
+  @Get()
+  @ApiOperation({ summary: 'Club get all' })
+  @ApiOkResponse({ type: ClubListDto })
+  async getClubs(@Query() query: ClubQuery): Promise<ClubListDto> {
+    return this.clubService.getClubs(query);
+  }
 
-    @Get(':clubId')
-    @ApiOperation({ summary: 'Club get by Id' })
-    @ApiOkResponse({ type: ClubDetailDto })
-    async getClubById(
-        @Param('clubId', ParseIntPipe) clubId: number,
-    ): Promise<ClubDetailDto> {
-        return this.clubService.getClubById(clubId);
-    }
+  @Get(':clubId')
+  @ApiOperation({ summary: 'Club get by Id' })
+  @ApiOkResponse({ type: ClubDetailDto })
+  async getClubById(
+    @Param('clubId', ParseIntPipe) clubId: number,
+  ): Promise<ClubDetailDto> {
+    return this.clubService.getClubById(clubId);
+  }
 
-    @Delete(':clubId')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    @ApiNoContentResponse()
-    async deleteEvent(
-        @Param('clubId', ParseIntPipe) clubId: number,
-        @CurrentUser() user: UserBaseInfo,
-    ): Promise<void> {
-        return this.clubService.deleteClub(clubId, user);
-    }
+  @Delete(':clubId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiNoContentResponse()
+  async deleteEvent(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @CurrentUser() user: UserBaseInfo,
+  ): Promise<void> {
+    return this.clubService.deleteClub(clubId, user);
+  }
 }
