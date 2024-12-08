@@ -47,20 +47,6 @@ export class ClubService {
         return ClubListDto.from(clubs);
     }
 
-    async deleteClub(clubId: number, user: UserBaseInfo): Promise<void> {
-        const club = await this.clubRepository.getClubById(clubId);
-
-        if (!club) {
-            throw new NotFoundException('Can not find a club.');
-        }
-
-        if (club.leaderId !== user.id) {
-            throw new ForbiddenException('Users can not delete the club.');
-        }
-
-        await this.clubRepository.deleteClub(clubId);
-    }
-
     async joinClub(clubId: number, user: UserBaseInfo): Promise<void> {
         const club = await this.clubRepository.getClubById(clubId);
 

@@ -13,24 +13,22 @@ import { ClubStatus } from '@prisma/client';
 export class ClubRepository {
   constructor(private readonly prisma: PrismaService) {}
   
-  async createClub(data: CreateClubData): Promise<ClubData> {
-    return this.prisma.club.create({
-      data: {
-        name: data.name,
-        description: data.description,
-        leaderId: data.leaderId,
-        maxPeople: data.maxPeople,
-        members: {
-          create: {
-            userId: data.leaderId,
-            status: ClubStatus.PENDING,
+    async createClub(data: CreateClubData): Promise<ClubData> {
+      return this.prisma.club.create({
+        data: {
+          name: data.name,
+          description: data.description,
+          leaderId: data.leaderId,
+          maxPeople: data.maxPeople,
+          members: {
+            create: {
+              userId: data.leaderId,
+              status: ClubStatus.PENDING,
+            },
           },
         },
-      },
-    });
-  }
-
-
+      });
+    }
     async isNameExist(clubName: string): Promise<boolean> {
       const club = await this.prisma.club.findUnique({
         where: {
@@ -135,20 +133,5 @@ export class ClubRepository {
           },
         },
       });
-    }
-
-    async deleteClub(id: number): Promise<void> {
-      await this.prisma.$transaction([
-        this.prisma.clubJoin.deleteMany({
-          where: {
-            clubId: id,
-          },
-        }),
-        this.prisma.club.delete({
-          where: {
-            id,
-          },
-        }),
-      ]);
     }
   }
