@@ -13,7 +13,7 @@ import { ClubStatus } from '@prisma/client';
 export class ClubRepository {
   constructor(private readonly prisma: PrismaService) {}
   
- async createClub(data: CreateClubData): Promise<ClubData> {
+  async createClub(data: CreateClubData): Promise<ClubData> {
     return this.prisma.club.create({
       data: {
         name: data.name,
@@ -31,89 +31,124 @@ export class ClubRepository {
   }
 
 
-  async isNameExist(clubName: string): Promise<boolean> {
-    const club = await this.prisma.club.findUnique({
-      where: {
-        name: clubName,
-      },
-    });
-
-    return !!club;
-  }
-
-  async getClubById(id: number): Promise<ClubData | null> {
-    return this.prisma.club.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        name: true,
-        leaderId: true,
-        description: true,
-        maxPeople: true,
-      },
-    });
-  }
-
-  async getClubs(query: ClubQuery): Promise<ClubData[]> {
-    return this.prisma.club.findMany({
-      where: {
-        name: query.name,
-        leader: {
-          id: query.leaderId,
-          deletedAt: null
+    async isNameExist(clubName: string): Promise<boolean> {
+      const club = await this.prisma.club.findUnique({
+        where: {
+          name: clubName,
         },
-      },
-      select: {
-        id: true,
-        name: true,
-        leaderId: true,
-        description: true,
-        maxPeople: true,
-      },
-    });
-  }
+      });
 
-  async findClubDetailById(clubId: number): Promise<ClubDetailData | null> {
-    return this.prisma.club.findUnique({
-      where: {
-        id: clubId,
-      },
-      select: {
-        id: true,
-        name: true,
-        leaderId: true,
-        description: true,
-        maxPeople: true,
-        createdAt: true,
-        updatedAt: true,
-        members: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
+      return !!club;
+    }
+
+    async getClubById(id: number): Promise<ClubData | null> {
+      return this.prisma.club.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          id: true,
+          name: true,
+          leaderId: true,
+          description: true,
+          maxPeople: true,
+        },
+      });
+    }
+
+    async getClubs(query: ClubQuery): Promise<ClubData[]> {
+      return this.prisma.club.findMany({
+        where: {
+          name: query.name,
+          leader: {
+            id: query.leaderId,
+            deletedAt: null
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          leaderId: true,
+          description: true,
+          maxPeople: true,
+        },
+      });
+    }
+
+    async findClubDetailById(clubId: number): Promise<ClubDetailData | null> {
+      return this.prisma.club.findUnique({
+        where: {
+          id: clubId,
+        },
+        select: {
+          id: true,
+          name: true,
+          leaderId: true,
+          description: true,
+          maxPeople: true,
+          createdAt: true,
+          updatedAt: true,
+          members: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-    });
-  }
+      });
+    }
 
-  async deleteClub(id: number): Promise<void> {
-    await this.prisma.$transaction([
-      this.prisma.clubJoin.deleteMany({
+    async getMembersIds(clubId: number): Promise<number[]> {
+      const data = await this.prisma.clubJoin.findMany({
         where: {
-          clubId: id,
+          clubId,
+          user: {
+            deletedAt: null,
+          },
         },
-      }),
-      this.prisma.club.delete({
+        select: {
+          userId: true,
+        },
+      });
+      return data.map((d) => d.userId);
+    }
+
+    async joinClub(clubId: number, userId: number): Promise<void> {
+      await this.prisma.clubJoin.create({
+        data: {
+          clubId,
+          userId,
+        },
+      });
+    }
+
+    async leaveClub(clubId: number, userId: number): Promise<void> {
+      await this.prisma.clubJoin.delete({
         where: {
-          id,
+          clubId_userId: {
+            clubId,
+            userId,
+          },
         },
-      }),
-    ]);
+      });
+    }
+
+    async deleteClub(id: number): Promise<void> {
+      await this.prisma.$transaction([
+        this.prisma.clubJoin.deleteMany({
+          where: {
+            clubId: id,
+          },
+        }),
+        this.prisma.club.delete({
+          where: {
+            id,
+          },
+        }),
+      ]);
+    }
   }
-}

@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException} from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, ForbiddenException} from '@nestjs/common';
 import { ClubRepository } from './club.repository';
 import { ClubDto, ClubListDto} from './dto/club.dto';
 import { CreateClubPayload } from './payload/create-club.payload';
@@ -46,4 +46,53 @@ export class ClubService {
 
         return ClubListDto.from(clubs);
     }
+
+    async deleteClub(clubId: number, user: UserBaseInfo): Promise<void> {
+        const club = await this.clubRepository.getClubById(clubId);
+
+        if (!club) {
+            throw new NotFoundException('Can not find a club.');
+        }
+
+        if (club.leaderId !== user.id) {
+            throw new ForbiddenException('Users can not delete the club.');
+        }
+
+        await this.clubRepository.deleteClub(clubId);
+    }
+
+    async joinClub(clubId: number, user: UserBaseInfo): Promise<void> {
+        const club = await this.clubRepository.getClubById(clubId);
+
+        if (!club) {
+            throw new NotFoundException('모임을 찾을 수 없습니다.');
+        }
+
+        const membersIds = await this.clubRepository.getMembersIds(clubId);
+
+        if (membersIds.includes(user.id)) {
+            throw new ConflictException('You are already a member.');
+        }
+
+        if (membersIds.length >= club.maxPeople) {
+            throw new ConflictException('Club is already full.');
+        }
+
+        await this.clubRepository.joinClub(clubId, user.id);
+    }
+    async leaveClub(clubId: number, user: UserBaseInfo): Promise<void> {
+        const club = await this.clubRepository.getClubById(clubId);
+
+        if (!club) {
+            throw new NotFoundException('Can not find a club.');
+        }
+
+        if (club.leaderId === user.id) {
+            throw new ConflictException('Leader of the Club can not leave.');
+        }
+
+        await this.clubRepository.leaveClub(clubId, user.id);
+    }
 }
+
+
