@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../common/services/prisma.service';
 import { ClubData } from './type/club-data.type';
-import { User, Club } from '@prisma/client'
+import { User, Club } from '@prisma/client';
 import { CreateClubData } from './type/create-club-data.type';
 import { ClubDetailData } from './type/club-detail-data.type';
 import { ClubQuery } from './query/club.query';
 import { ClubJoin } from '@prisma/client';
 import { ClubStatus } from '@prisma/client';
 
-
 @Injectable()
 export class ClubRepository {
   constructor(private readonly prisma: PrismaService) {}
-  
- async createClub(data: CreateClubData): Promise<ClubData> {
+
+  async createClub(data: CreateClubData): Promise<ClubData> {
     return this.prisma.club.create({
       data: {
         name: data.name,
@@ -29,8 +28,6 @@ export class ClubRepository {
       },
     });
   }
-
-
   async isNameExist(clubName: string): Promise<boolean> {
     const club = await this.prisma.club.findUnique({
       where: {
@@ -62,7 +59,7 @@ export class ClubRepository {
         name: query.name,
         leader: {
           id: query.leaderId,
-          deletedAt: null
+          deletedAt: null,
         },
       },
       select: {
@@ -102,18 +99,38 @@ export class ClubRepository {
     });
   }
 
-  async deleteClub(id: number): Promise<void> {
-    await this.prisma.$transaction([
-      this.prisma.clubJoin.deleteMany({
-        where: {
-          clubId: id,
+  async getMembersIds(clubId: number): Promise<number[]> {
+    const data = await this.prisma.clubJoin.findMany({
+      where: {
+        clubId,
+        user: {
+          deletedAt: null,
         },
-      }),
-      this.prisma.club.delete({
-        where: {
-          id,
+      },
+      select: {
+        userId: true,
+      },
+    });
+    return data.map((d) => d.userId);
+  }
+
+  async joinClub(clubId: number, userId: number): Promise<void> {
+    await this.prisma.clubJoin.create({
+      data: {
+        clubId,
+        userId,
+      },
+    });
+  }
+
+  async leaveClub(clubId: number, userId: number): Promise<void> {
+    await this.prisma.clubJoin.delete({
+      where: {
+        clubId_userId: {
+          clubId,
+          userId,
         },
-      }),
-    ]);
+      },
+    });
   }
 }
