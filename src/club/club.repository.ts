@@ -57,6 +57,17 @@ export class ClubRepository {
     });
   }
 
+  async leadershipTransfer(clubId: number, newLeaderId: number): Promise<void> {
+    await this.prisma.club.update({
+      where: {
+        id: clubId,
+      },
+      data: {
+        leaderId: newLeaderId,
+      },
+    });
+  }
+
   async getClubs(query: ClubQuery): Promise<ClubData[]> {
     return this.prisma.club.findMany({
       where: {
