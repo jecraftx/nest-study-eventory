@@ -156,6 +156,7 @@ model Club {
   maxPeople   Int       @map("max_people")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
+  archived    Boolean   @default(false) @map("archived") 
 
   leader  User    @relation("UserLeaderOf", fields: [leaderId], references: [id]) 
   members ClubJoin[] 
@@ -180,7 +181,7 @@ model ClubJoin {
   @@map("club_join")
 }
 
-model ClubRequest { // to handle the incoming requests 
+model ClubRequest { 
   id         Int        @id @default(autoincrement())
   clubId     Int        @map("club_id")
   userId     Int        @map("user_id")

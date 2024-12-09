@@ -75,13 +75,7 @@ export class ClubController {
     ): Promise<void> {
         return this.clubService.joinClub(clubId, user);
     }
-
-    // what if user has created or participated in gatherings 
-    // user who has left the club could end up running or participating in club gatherings 
-    // if the user has hosted or participated in a gathering that has already started by the time they leave club, just leave as it is 
-    // if the user is host of a gathering that hasn't started yet, remove them from the gathering 
-    // if the gathering has already ended it should be archived as part of ther user's participation record, so they stillview it even after leaving the club, 
-    // if gatherings have not started yet, everything needs to be cleared up 
+    
     @Post(':clubId/leave')
     @HttpCode(204)
     @UseGuards(JwtAuthGuard)

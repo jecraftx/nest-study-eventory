@@ -7,6 +7,7 @@ import { ClubDetailData } from './type/club-detail-data.type';
 import { ClubQuery } from './query/club.query';
 import { ClubJoin } from '@prisma/client';
 import { ClubStatus } from '@prisma/client';
+import { EventData } from 'src/event/type/event-data.type';
 
 @Injectable()
 export class ClubRepository {
@@ -116,6 +117,29 @@ export class ClubRepository {
       return data.map((d) => d.userId);
     }
 
+    async getClubEvents(clubId: number): Promise<EventData[]> {
+      return this.prisma.event.findMany({
+        where: {
+          clubId
+        },
+        select: {
+          id: true,
+          hostId: true,
+          title: true,
+          description: true,
+          categoryId: true,
+          eventCity: {
+            select: {
+              cityId: true,
+            },
+          },
+          startTime: true,
+          endTime: true,
+          maxPeople: true,
+        },
+      });
+    }
+
     async joinClub(clubId: number, userId: number): Promise<void> {
       await this.prisma.clubJoin.create({
         data: {
@@ -125,38 +149,31 @@ export class ClubRepository {
       });
     }
 
-    async leaveClub(clubId: number, userId: number): Promise<void> {
-      await this.prisma.clubJoin.delete({
-        where: {
-          clubId_userId: {
-            clubId,
-            userId,
-          },
-        },
-      });
-    }
-
-    // Archive an event (mark as completed)
     async archiveEvent(eventId: number): Promise<void> {
-      await this.prisma.event.update({
-        where: { id: eventId },
-        data: { archived: true },
-      });
-    }
-
-    // Delete an event (if not started)
-    async deleteEvent(eventId: number): Promise<void> {
       await this.prisma.event.delete({
         where: { id: eventId },
       });
     }
 
-    // Remove a participant from an event (if they are not the host)
+    async deleteEvent(eventId: number): Promise<void> {
+      await this.prisma.event.delete({
+        where: { id: eventId }, 
+      });
+    }
+
     async removeParticipantFromEvent(eventId: number, userId: number): Promise<void> {
       await this.prisma.eventJoin.delete({
         where: {
-          eventId_userId: {
-            eventId,
+          eventId_userId: { eventId, userId }, 
+        },
+      });
+    }
+
+    async leaveClub(clubId: number, userId: number): Promise<void> {
+      await this.prisma.clubJoin.delete({
+        where: {
+          clubId_userId: {
+            clubId,
             userId,
           },
         },
