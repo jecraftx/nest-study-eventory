@@ -8,6 +8,9 @@ import { ClubQuery } from './query/club.query';
 import { ClubJoin } from '@prisma/client';
 import { ClubStatus } from '@prisma/client';
 import { EventData } from 'src/event/type/event-data.type';
+import { PutUpdateClubPayload } from './payload/put-update-club.payload';
+import { PatchUpdateClubPayload } from './payload/patch-update-club';
+import { UpdateClubData } from './type/update-club-data.type';
 
 @Injectable()
 export class ClubRepository {
@@ -29,6 +32,7 @@ export class ClubRepository {
       },
     });
   }
+  
   async isNameExist(clubName: string): Promise<boolean> {
     const club = await this.prisma.club.findUnique({
       where: {
@@ -71,6 +75,22 @@ export class ClubRepository {
         maxPeople: true,
       },
     });
+  }
+
+  async getMembersIds(clubId: number): Promise<number[]> {
+    const data = await this.prisma.clubJoin.findMany({
+      where: {
+        clubId,
+        user: {
+          deletedAt: null,
+        },
+        status: 'APPROVED', // 승인된 사람들만 멤버로 간주됩니다.
+      },
+      select: {
+        userId: true,
+      },
+    });
+    return data.map((d) => d.userId);
   }
 
   async findClubDetailById(clubId: number): Promise<ClubDetailData | null> {
@@ -179,6 +199,25 @@ export class ClubRepository {
           clubId,
           userId,
         },
+      },
+    });
+    
+  async updateClub(id: number, data: UpdateClubData): Promise<ClubData> {
+    return this.prisma.club.update({
+      where: {
+        id,
+      },
+      data: {
+        name: data.name,
+        description: data.description,
+        maxPeople: data.maxPeople,
+      },
+      select: {
+        id: true,
+        name: true,
+        leaderId: true,
+        description: true,
+        maxPeople: true,
       },
     });
   }

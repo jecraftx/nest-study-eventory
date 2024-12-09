@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
+  BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
 import { ClubRepository } from './club.repository';
@@ -14,6 +15,9 @@ import { ClubQuery } from './query/club.query';
 import { ClubJoin, ClubStatus } from '@prisma/client';
 import { Event } from '@prisma/client';
 import { EventJoin } from '@prisma/client';
+import { PutUpdateClubPayload } from './payload/put-update-club.payload';
+import { PatchUpdateClubPayload } from './payload/patch-update-club';
+import { UpdateClubData } from './type/update-club-data.type';
 
 @Injectable()
 export class ClubService {
@@ -121,5 +125,115 @@ export class ClubService {
     }
 
     await this.clubRepository.leaveClub(clubId, user.id);
+
+  async getClubById(clubId: number): Promise<ClubDetailDto> {
+    const club = await this.clubRepository.findClubDetailById(clubId);
+
+    if (!club) {
+      throw new NotFoundException('Can not find the Club.');
+    }
+
+    return ClubDetailDto.from(club);
+  }
+
+  async getClubs(query: ClubQuery): Promise<ClubListDto> {
+    const clubs = await this.clubRepository.getClubs(query);
+
+    return ClubListDto.from(clubs);
+  }
+
+  async putUpdateClub(
+    clubId: number,
+    payload: PutUpdateClubPayload,
+    user: UserBaseInfo,
+  ): Promise<ClubDto> {
+    const club = await this.clubRepository.getClubById(clubId);
+
+    if (!club) {
+      throw new NotFoundException('Can not find a Club');
+    }
+
+    if (club.leaderId !== user.id) {
+      throw new ForbiddenException('Only leader can edit.');
+    }
+
+    const isNameExist = await this.clubRepository.isNameExist(payload.name);
+    if (isNameExist) {
+      throw new ConflictException('Such name already exists.');
+    }
+
+    const data: UpdateClubData = {
+      name: payload.name,
+      description: payload.description,
+      maxPeople: payload.maxPeople,
+    };
+
+    const membersIds = await this.clubRepository.getMembersIds;
+
+    if (payload.maxPeople && membersIds.length > payload.maxPeople) {
+      throw new ConflictException(
+        'You cannot change the number of members to a number less than the current number.',
+      );
+    }
+
+    const updatedClub = await this.clubRepository.updateClub(clubId, data);
+
+    return ClubDto.from(updatedClub);
+  }
+
+  async patchUpdateClub(
+    clubId: number,
+    payload: PatchUpdateClubPayload,
+    user: UserBaseInfo,
+  ): Promise<ClubDto> {
+    const data = this.validateNullOf(payload);
+
+    const club = await this.clubRepository.getClubById(clubId);
+
+    if (!club) {
+      throw new NotFoundException('Can not find a club.');
+    }
+
+    if (club.leaderId !== user.id) {
+      throw new ForbiddenException('Only leader can edit.');
+    }
+
+    const isNameExist = await this.clubRepository.isNameExist(payload.name);
+
+    if (isNameExist) {
+      throw new ConflictException('Such name already exists.');
+    }
+
+    const membersIds = await this.clubRepository.getMembersIds;
+
+    if (payload.maxPeople && membersIds.length > payload.maxPeople) {
+      throw new ConflictException(
+        'You cannot change the number of members to a number less than the current number.',
+      );
+    }
+
+    const updatedClub = await this.clubRepository.updateClub(clubId, data);
+
+    return ClubDto.from(updatedClub);
+  }
+
+  private validateNullOf(payload: PatchUpdateClubPayload): UpdateClubData {
+    if (payload.name === null) {
+      throw new BadRequestException('name can not be null');
+    }
+
+    if (payload.description === null) {
+      throw new BadRequestException('description can not be null');
+    }
+
+    if (payload.maxPeople === null) {
+      throw new BadRequestException('maxPeople can not be null');
+    }
+
+    return {
+      name: payload.name,
+      description: payload.description,
+      maxPeople: payload.maxPeople,
+    };
   }
 }

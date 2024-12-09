@@ -29,6 +29,8 @@ import { CreateClubPayload } from './payload/create-club.payload';
 import { CurrentUser } from 'src/auth /decorator /user.decorator';
 import { UserBaseInfo } from 'src/auth /type/user-base-info-type';
 import { ClubService } from './club.service';
+import { PutUpdateClubPayload } from './payload/put-update-club.payload';
+import { PatchUpdateClubPayload } from './payload/patch-update-club';
 
 @Controller('club')
 @ApiTags('Club API')
@@ -87,5 +89,30 @@ export class ClubController {
     @CurrentUser() user: UserBaseInfo,
   ): Promise<void> {
     return this.clubService.leaveClub(clubId, user);
+
+  @Put(':clubId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Club PUT Update' })
+  @ApiOkResponse({ type: ClubDto })
+  async putUpdateClub(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Body() payload: PutUpdateClubPayload,
+    @CurrentUser() user: UserBaseInfo,
+  ): Promise<ClubDto> {
+    return this.clubService.putUpdateClub(clubId, payload, user);
+  }
+
+  @Patch(':clubId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Club PATCH Update' })
+  @ApiOkResponse({ type: ClubDto })
+  async patchUpdateClub(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @Body() payload: PatchUpdateClubPayload,
+    @CurrentUser() user: UserBaseInfo,
+  ): Promise<ClubDto> {
+    return this.clubService.patchUpdateClub(clubId, payload, user);
   }
 }
