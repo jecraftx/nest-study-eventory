@@ -146,14 +146,14 @@ export class ClubRepository {
     });
 
     const eventIds = events.map((event) => event.id);
-    
+
     await this.prisma.$transaction([
       this.prisma.event.updateMany({
         where: {
           id: { in: eventIds },
           startTime: { lt: new Date() },
         },
-        data: { 
+        data: {
           clubId: null,
         },
       }),

@@ -135,18 +135,18 @@ export class ClubService {
   }
 
   async deleteClub(clubId: number, user: UserBaseInfo): Promise<void> {
-        const club = await this.clubRepository.getClubById(clubId);
+    const club = await this.clubRepository.getClubById(clubId);
 
-        if (!club) {
-            throw new NotFoundException('Can not find a club.');
-        }
-
-        if (club.leaderId !== user.id) {
-            throw new ForbiddenException('Users can not delete the club.');
-        }
-
-        await this.clubRepository.deleteClub(clubId);
+    if (!club) {
+      throw new NotFoundException('Can not find a club.');
     }
+
+    if (club.leaderId !== user.id) {
+      throw new ForbiddenException('Users can not delete the club.');
+    }
+
+    await this.clubRepository.deleteClub(clubId);
+  }
 
   private validateNullOf(payload: PatchUpdateClubPayload): UpdateClubData {
     if (payload.name === null) {
