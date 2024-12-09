@@ -8,7 +8,6 @@ import { ClubQuery } from './query/club.query';
 import { ClubJoin } from '@prisma/client';
 import { ClubStatus } from '@prisma/client';
 
-
 @Injectable()
 export class ClubRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -100,6 +99,7 @@ export class ClubRepository {
       });
     }
 
+    // 승인된 사람들만 멤버로 간주됩니다.
     async getMembersIds(clubId: number): Promise<number[]> {
       const data = await this.prisma.clubJoin.findMany({
         where: {
@@ -107,6 +107,7 @@ export class ClubRepository {
           user: {
             deletedAt: null,
           },
+          status: 'APPROVED',
         },
         select: {
           userId: true,
@@ -129,6 +130,41 @@ export class ClubRepository {
         where: {
           clubId_userId: {
             clubId,
+            userId,
+          },
+        },
+      });
+    }
+
+    async getClubEvents(clubId: number): Promise<Event[]> {
+      return this.prisma.event.findMany({
+        where: {
+          clubId,
+          deletedAt: null,
+        },
+      });
+}
+    // Archive an event (mark as completed)
+    async archiveEvent(eventId: number): Promise<void> {
+      await this.prisma.event.update({
+        where: { id: eventId },
+        data: { archived: true },
+      });
+    }
+
+    // Delete an event (if not started)
+    async deleteEvent(eventId: number): Promise<void> {
+      await this.prisma.event.delete({
+        where: { id: eventId },
+      });
+    }
+
+    // Remove a participant from an event (if they are not the host)
+    async removeParticipantFromEvent(eventId: number, userId: number): Promise<void> {
+      await this.prisma.eventJoin.delete({
+        where: {
+          eventId_userId: {
+            eventId,
             userId,
           },
         },

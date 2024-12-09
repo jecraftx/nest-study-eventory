@@ -26,11 +26,12 @@ model User {
   updatedAt    DateTime  @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at")
 
-  event     Event[]
-  eventJoin EventJoin[]
-  review    Review[]
-  clubs     ClubJoin[]  
-  leaderOf  Club?   @relation("UserLeaderOf")
+  event       Event[]
+  eventJoin   EventJoin[]
+  review      Review[]
+  members     ClubJoin[]  
+  leaderOf    Club?   @relation("UserLeaderOf")
+  requests    ClubRequest[]
 
   city     City?    @relation(fields: [cityId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
@@ -63,6 +64,7 @@ model Event {
   updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
   clubId      Int?      @map("club_id")
+  archived    Boolean   @default(false) @map("archived") 
 
   host     User     @relation(fields: [hostId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
@@ -157,6 +159,7 @@ model Club {
 
   leader  User    @relation("UserLeaderOf", fields: [leaderId], references: [id]) 
   members ClubJoin[] 
+  requests ClubRequest[]
   events  Event[] 
 
   @@map("club")
@@ -175,6 +178,20 @@ model ClubJoin {
 
   @@unique([clubId, userId]) 
   @@map("club_join")
+}
+
+model ClubRequest { // to handle the incoming requests 
+  id         Int        @id @default(autoincrement())
+  clubId     Int        @map("club_id")
+  userId     Int        @map("user_id")
+  status     ClubStatus @default(PENDING)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  club Club @relation(fields: [clubId], references: [id]) 
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("club_request")
 }
 
 enum ClubStatus {

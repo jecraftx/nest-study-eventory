@@ -6,6 +6,7 @@ import { CreateClubData } from './type/create-club-data.type';
 import { UserBaseInfo } from 'src/auth /type/user-base-info-type';
 import { ClubDetailDto } from './dto/club-detail.dto';
 import { ClubQuery } from './query/club.query';
+import { ClubJoin } from '@prisma/client';
 
 @Injectable()
 export class ClubService {
@@ -66,6 +67,7 @@ export class ClubService {
 
         await this.clubRepository.joinClub(clubId, user.id);
     }
+    
     async leaveClub(clubId: number, user: UserBaseInfo): Promise<void> {
         const club = await this.clubRepository.getClubById(clubId);
 
@@ -73,10 +75,32 @@ export class ClubService {
             throw new NotFoundException('Can not find a club.');
         }
 
+        // Ensure leader cannot leave the club
         if (club.leaderId === user.id) {
-            throw new ConflictException('Leader of the Club can not leave.');
+            throw new ConflictException('Leader of the Club cannot leave.');
         }
 
+        // Get all events related to the club
+        const events = await this.clubRepository.getClubEvents(clubId);
+
+        // Loop through the events and handle the user as host or participant
+        for (const event of events) {
+            // If the event has already started, we archive it
+            if (event.startTime < new Date()) {
+            // Archive the event (mark it as archived in the database)
+                await this.clubRepository.archiveEvent(event.id);
+            } else {
+            // If the event has not started:
+            // If the user is the host, we delete the event
+                if (event.hostId === user.id) {
+                    await this.clubRepository.deleteEvent(event.id);
+                } else {
+                    // If the user is a participant, we remove them from the event
+                    await this.clubRepository.removeParticipantFromEvent(event.id, user.id);
+                }
+            }
+        }
+        // Remove the user from the club
         await this.clubRepository.leaveClub(clubId, user.id);
     }
 }
