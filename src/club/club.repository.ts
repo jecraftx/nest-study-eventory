@@ -136,14 +136,6 @@ export class ClubRepository {
       });
     }
 
-    async getClubEvents(clubId: number): Promise<Event[]> {
-      return this.prisma.event.findMany({
-        where: {
-          clubId,
-          deletedAt: null,
-        },
-      });
-}
     // Archive an event (mark as completed)
     async archiveEvent(eventId: number): Promise<void> {
       await this.prisma.event.update({
