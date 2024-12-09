@@ -90,4 +90,15 @@ export class ClubController {
   ): Promise<ClubDto> {
     return this.clubService.patchUpdateClub(clubId, payload, user);
   }
+
+  @Delete(':clubId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiNoContentResponse()
+  async deleteClub(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @CurrentUser() user: UserBaseInfo,
+  ): Promise<void> {
+    return this.clubService.deleteClub(clubId, user);
+  }
 }

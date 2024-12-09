@@ -149,4 +149,51 @@ export class ClubRepository {
       },
     });
   }
+
+  async deleteClub(id: number): Promise<void> {
+    const events = await this.prisma.event.findMany({
+      where: { clubId: id },
+      select: { id: true, startTime: true },
+    });
+
+    const eventIds = events.map((event) => event.id);
+
+    await this.prisma.$transaction([
+      this.prisma.event.updateMany({
+        where: {
+          id: { in: eventIds },
+          startTime: { lt: new Date() },
+        },
+        data: {
+          clubId: null,
+        },
+      }),
+      this.prisma.event.deleteMany({
+        where: {
+          id: { in: eventIds },
+          startTime: { gt: new Date() },
+        },
+      }),
+      this.prisma.eventCity.deleteMany({
+        where: {
+          eventId: { in: eventIds },
+        },
+      }),
+      this.prisma.eventJoin.deleteMany({
+        where: {
+          eventId: { in: eventIds },
+        },
+      }),
+      this.prisma.clubJoin.deleteMany({
+        where: {
+          clubId: id,
+        },
+      }),
+      this.prisma.club.delete({
+        where: {
+          id,
+        },
+      }),
+    ]);
+  }
 }
