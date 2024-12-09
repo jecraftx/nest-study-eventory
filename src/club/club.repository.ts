@@ -7,6 +7,7 @@ import { ClubDetailData } from './type/club-detail-data.type';
 import { ClubQuery } from './query/club.query';
 import { ClubJoin } from '@prisma/client';
 import { ClubStatus } from '@prisma/client';
+import { EventData } from 'src/event/type/event-data.type';
 import { PutUpdateClubPayload } from './payload/put-update-club.payload';
 import { PatchUpdateClubPayload } from './payload/patch-update-club';
 import { UpdateClubData } from './type/update-club-data.type';
@@ -31,7 +32,7 @@ export class ClubRepository {
       },
     });
   }
-
+  
   async isNameExist(clubName: string): Promise<boolean> {
     const club = await this.prisma.club.findUnique({
       where: {
@@ -119,6 +120,88 @@ export class ClubRepository {
     });
   }
 
+  // 승인된 사람들만 멤버로 간주됩니다.
+  async getMembersIds(clubId: number): Promise<number[]> {
+    const data = await this.prisma.clubJoin.findMany({
+      where: {
+        clubId,
+        user: {
+          deletedAt: null,
+        },
+        status: 'APPROVED',
+      },
+      select: {
+        userId: true,
+      },
+    });
+    return data.map((d) => d.userId);
+  }
+
+  async getClubEvents(clubId: number): Promise<EventData[]> {
+    return this.prisma.event.findMany({
+      where: {
+        clubId,
+      },
+      select: {
+        id: true,
+        hostId: true,
+        title: true,
+        description: true,
+        categoryId: true,
+        eventCity: {
+          select: {
+            cityId: true,
+          },
+        },
+        startTime: true,
+        endTime: true,
+        maxPeople: true,
+      },
+    });
+  }
+
+  async joinClub(clubId: number, userId: number): Promise<void> {
+    await this.prisma.clubJoin.create({
+      data: {
+        clubId,
+        userId,
+      },
+    });
+  }
+
+  async archiveEvent(eventId: number): Promise<void> {
+    await this.prisma.event.delete({
+      where: { id: eventId },
+    });
+  }
+
+  async deleteEvent(eventId: number): Promise<void> {
+    await this.prisma.event.delete({
+      where: { id: eventId },
+    });
+  }
+
+  async removeParticipantFromEvent(
+    eventId: number,
+    userId: number,
+  ): Promise<void> {
+    await this.prisma.eventJoin.delete({
+      where: {
+        eventId_userId: { eventId, userId },
+      },
+    });
+  }
+
+  async leaveClub(clubId: number, userId: number): Promise<void> {
+    await this.prisma.clubJoin.delete({
+      where: {
+        clubId_userId: {
+          clubId,
+          userId,
+        },
+      },
+    });
+    
   async updateClub(id: number, data: UpdateClubData): Promise<ClubData> {
     return this.prisma.club.update({
       where: {

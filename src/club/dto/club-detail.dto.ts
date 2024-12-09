@@ -48,10 +48,10 @@ export class ClubDetailDto {
   maxPeople!: number;
 
   @ApiProperty({
-    description: 'Participant',
+    description: 'Member',
     type: [SimpleUserDto],
   })
-  participants!: SimpleUserDto[];
+  members!: SimpleUserDto[];
 
   static from(data: ClubDetailData): ClubDetailDto {
     return {
@@ -60,7 +60,7 @@ export class ClubDetailDto {
       leaderId: data.leaderId,
       description: data.description,
       maxPeople: data.maxPeople,
-      participants: data.members.map((join) => ({
+      members: data.members.map((join) => ({
         id: join.user.id,
         name: join.user.name,
       })),

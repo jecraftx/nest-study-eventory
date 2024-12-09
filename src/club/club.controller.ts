@@ -65,6 +65,31 @@ export class ClubController {
     return this.clubService.getClubById(clubId);
   }
 
+  @Post(':clubId/join')
+  @HttpCode(204)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Join Club' })
+  @ApiNoContentResponse()
+  async joinClub(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @CurrentUser() user: UserBaseInfo,
+  ): Promise<void> {
+    return this.clubService.joinClub(clubId, user);
+  }
+
+  @Post(':clubId/leave')
+  @HttpCode(204)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Leave Club' })
+  @ApiNoContentResponse()
+  async leaveClub(
+    @Param('clubId', ParseIntPipe) clubId: number,
+    @CurrentUser() user: UserBaseInfo,
+  ): Promise<void> {
+    return this.clubService.leaveClub(clubId, user);
+
   @Put(':clubId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
